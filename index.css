@@ -1,0 +1,20 @@
+body {
+	background-color:black;
+	text-align:center;
+}
+div {
+	font-family:"Maven Pro";
+	color:#F55B15;
+	height:70px;
+	font-size:40px;
+	opacity:0;
+
+
+}
+#canvas {
+	width:720px;
+	height:480px;
+	background-color: #2D2D2D;
+	border:1px solid #c3c3c3;
+	opacity:0;
+}
