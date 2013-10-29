@@ -53,6 +53,7 @@ pushTo = function(dot, x, y, a) {
 	var dist = Math.sqrt((dot.x-x)*(dot.x-x) + (dot.y-y)*(dot.y-y));
 		pushDot(dot,(x-dot.x)/dist * a, (y-dot.y)/dist * a);
 }
+accel = 0.9;
 
 moveToTarget = function(dot, tx, ty, callback) {
 	if (Math.abs(dot.x-tx) < 1 && Math.abs(dot.y-ty) < 1) {
@@ -60,16 +61,18 @@ moveToTarget = function(dot, tx, ty, callback) {
 		dot.y_ = dot.y = ty;
 		callback();
 	} else {
-		pushTo(dot, tx, ty, 0.5);
+		pushTo(dot, tx, ty, accel - 0.4/(snake.length));
 	}
 
 }
 
+friction = 0.85;
+
 moveDot = function(dot) {
 	var x_ = dot.x;
 	var y_ = dot.y;
-	dot.x += (dot.x - dot.x_) * (0.85 + snake.length/300);
-	dot.y += (dot.y - dot.y_) * (0.85 + snake.length/300);
+	dot.x += (dot.x - dot.x_) * friction;//(0.85 + snake.length/300);
+	dot.y += (dot.y - dot.y_) * friction;//(0.85 + snake.length/300);
 	dot.x_ = x_; dot.y_ = y_;
 }
 
@@ -81,6 +84,23 @@ getMousePos = function(c, evt) {
 }
 dots = new Array();
 framecount = 0;
+
+collision_edge = 0;
+
+collisionCheck = function() {
+	var hit = 0;
+	for (var i = 1; i < snake.length && !hit; i++) {
+		hit = (hypot(dots[i].x, dots[i].y, dots[0].x, dots[0].y) < 6);
+	}
+	if (hit && !collision_edge) {
+		console.log("splat");
+		collision_edge = 1;
+	}else if (!hit && collision_edge) {
+		console.log("unsplat");
+		collision_edge = 0;
+	}
+}
+
 update = function() {
 	framecount++;
 	snakeGame();
@@ -88,6 +108,7 @@ update = function() {
 		moveToTarget(dots[i], dots[i].target.x, dots[i].target.y, function(){/*console.log("" + framecount + " " + i + ": " + dots[i].tx +","+dots[i].ty);*/});
 		moveDot(dots[i]);
 	}
+	collisionCheck();
 };
 
 draw = function() {
@@ -95,15 +116,14 @@ draw = function() {
 	ctx.fillRect(0,0,720,480);
 	ctx.fillStyle="#F55B15";
 	drawCircle(dots[0].x, dots[0].y,4, ctx);
+	drawCircle(dots[dots.length-1].x,dots[dots.length-1].y,dots[dots.length-1].radius,ctx);
 	ctx.fillStyle="#FFFFFF";
 	
-	for(var i=1;i<dots.length;i++) {
+	for(var i=1;i<dots.length-1;i++) {
 		drawCircle(dots[i].x,dots[i].y,dots[i].radius,ctx);
 	}
-
-
 };
-
+/*
 gForce = 100;
 maxG = 0.7;
 gravSim = function() {
@@ -115,23 +135,21 @@ gravSim = function() {
 		}
 
 	} 
-}
+}*/
 
 snakeGame = function() {
-	
-// move food to head if close
 
 // extend snake if gets food
 	if (hypot(food.x, food.y, snake[0].x,snake[0].y) < 20) {
 		food.target = snake[snake.length-1];
-		pushTo(food,snake[snake.length-1].x,snake[snake.length-1].y,0.5);
+		//pushTo(food,snake[snake.length-1].x,snake[snake.length-1].y); // accel
 		snake[snake.length]=food;
-		food = new Dot (Math.random()*(720),Math.random()*(480));
+		food = new Dot (Math.random()*(700) + 10,Math.random()*(460)+10);
 		dots[dots.length]=food;
 		console.log("weee");
 	}
 
-// move head to mouse if click
+// move head to mouse
 	snake[0].target.x = mousePos.x;
 	snake[0].target.y = mousePos.y;
 }
